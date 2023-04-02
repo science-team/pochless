@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="./global.css" />
+        <title>The Pochless Counter</title>
+    </head>
+    <body>
+        <div class="flex h-screen">
+            <div class="w-screen">
+                <div class="bg-gray-200 py-2 px-4 font-bold">Pochless Counter</div>
+                <div class="p-4">
+                    <div class="text-xl font-bold">
+                        <img
+                            src="./assets/images/science-team.jpg"
+                            alt="science-team"
+                            class="w-8 h-8 inline"
+                        />
+                        What is this page?
+                    </div>
+                    <p>
+                        This is a formulated page to calculate how much time have passed since the
+                        last time we are away from our favourite
+                        <span class="text-orange-500">Shiba Inu</span>
+                        <span class="text-orange-600 font-bold">Pochi Wanmaru</span>
+                    </p>
+                </div>
+                <div class="p-4">
+                    <img
+                        id="fuyo-waiting"
+                        src="./assets/images/poch_load.webp"
+                        alt="pochi-loading"
+                        class="w-16 h-16"
+                    />
+                    <img
+                        id="fuyo-cry"
+                        src="./assets/images/poch_cry.webp"
+                        alt="pochi-cry"
+                        class="w-16 h-16 hidden"
+                    />
+                    <img
+                        id="fuyo-happy"
+                        src="./assets/images/poch_yeah.webp"
+                        alt="pochi-happy"
+                        class="w-16 h-16 hidden"
+                    />
+                    <div id="pochless" class="font-bold">
+                        Calculating your time without <span class="text-orange-600">Pochi...</span>
+                    </div>
+                    <div id="livestream" class="hidden font-bold">
+                        <span>LIVE AT</span> : <br />
+                        <a class="text-red-500" href="#">
+                            <span aria-label="title"></span>
+                            <img
+                                src=""
+                                alt="livestream thumbnail"
+                                class="w-64 border-2 border-solid border-gray-500 rounded"
+                            />
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const pochless = document.querySelector('#pochless');
+            const livestream = document.querySelector('#livestream');
+            function calculateDiffs(time) {
+                const now = new Date();
+                const diffTime = Math.abs(now - time);
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const diffMinutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+                const diffSeconds = Math.floor((diffTime % (1000 * 60)) / 1000);
+                return `${diffDays} days, ${diffHours} hours, ${diffMinutes} minutes, ${diffSeconds} seconds`;
+            }
+            async function chubaless(channelID = 'UC8zgKaS8LiyL28mdhRC2nBg') {
+                const liveData = await fetch(
+                    `https://holodex.net/api/v2/live?channel_id=${channelID}&limit=1&status=live`
+                ).then((res) => res.json());
+                if (liveData.length) {
+                    const [{ id, title }] = liveData;
+                    const link = `https://youtube.com/live/${id}`;
+                    const thumbnail = `https://i.ytimg.com/vi/${id}/maxresdefault_live.jpg`;
+
+                    setTimeout(() => {
+                        document.querySelector('#fuyo-waiting').classList.toggle('hidden');
+                        document.querySelector('#fuyo-happy').classList.toggle('hidden');
+                        pochless.innerHTML =
+                            'Pochi is LIVE! <span class="text-red-600">Pochless</span> is no more!';
+                        livestream.querySelector('img').src = thumbnail;
+                        livestream.querySelector('a').href = link;
+                        livestream.querySelector('span[aria-label="title"]').innerText = title;
+
+                        livestream.classList.toggle('hidden');
+                    }, 1000);
+                    return;
+                }
+                const lastStreamData = await fetch(
+                    `https://holodex.net/api/v2/videos?channel_id=${channelID}&status=past&limit=1&type=stream`
+                ).then((res) => res.json());
+                const [{ available_at, duration, id, title }] = lastStreamData;
+                const stream_start = new Date(available_at);
+                const stream_end = new Date(stream_start.getTime() + duration * 1000);
+                const link = `https://youtube.com/live/${id}`;
+                const thumbnail = `https://i.ytimg.com/vi/${id}/maxresdefault_live.jpg`;
+
+                let changed = false;
+                setInterval(() => {
+                    const result = calculateDiffs(stream_end);
+                    if (!changed) {
+                        changed = true;
+                        document.querySelector('#fuyo-waiting').classList.toggle('hidden');
+                        document.querySelector('#fuyo-cry').classList.toggle('hidden');
+                        livestream.querySelector('span').innerText = 'LAST SEEN';
+                        livestream.querySelector('img').src = thumbnail;
+                        livestream.querySelector('a').href = link;
+                        livestream.querySelector('span[aria-label="title"]').innerText = title;
+                        livestream.classList.toggle('hidden');
+                    }
+                    pochless.innerHTML = `We have been <span class="text-red-600">Pochless</span> for : <br /> ${result}`;
+                }, 1000);
+            }
+            chubaless('UCP0csSl19lOSNwJGCFsJqAQ');
+        </script>
+    </body>
+</html>
